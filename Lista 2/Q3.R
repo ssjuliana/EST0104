@@ -47,7 +47,7 @@ simulated.annealing <- function(x, m0){
   n.iter = 500
   
   teta = matrix(0, nrow = n.iter, ncol = length(m0))
-  teta[1,] <- m0
+  teta[1,] = m0
   
   f.eval = accept = rep(0, n.iter)
   f.eval[1] = f(teta[1,], x)
@@ -81,6 +81,35 @@ m0 = c(-1, -1, -1, 5, 5, 5)
 simulated.annealing(x, m0 = m0)
 
 # c) algoritmo EM 
+
+EM.alg <- function(x, m0, eps = 1e-04){
+  
+  mu1Inicial = m0[1:3]
+  mu2Inicial = m0[4:6]
+  
+  cc = 1
+  
+  while(cc > eps){
+    
+    # Etapa E
+    E = dmvnorm(x,mu1Inicial)/(dmvnorm(x,mu1Inicial) + 3*dmvnorm(x,mu2Inicial))
+    
+    # Etapa M
+    mu1Par = colSums(x*E)/sum(E)
+    mu2Par = colSums(x*(1 - E))/sum(1 - E)
+    
+    cc1 = (mu1Inicial- mu1Par)^2
+    cc2 = (mu2Inicial - mu2Par)^2
+    cc = mean(cc1 + cc2)
+    mu1Inicial = mu1Par
+    mu2Inicial = mu2Par
+  }
+  
+  list('arg.opt' = c(mu1Par, mu2Par))
+  
+}
+
+EM.alg(x, m0)
 
 # d) optim do R
 

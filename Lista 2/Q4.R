@@ -12,8 +12,7 @@ X = matrix(c(0,2,5,6,3,1,3,3,1,2,
            1,0,2,1,0,0,0,1,2,5,
            1,0,2,1,0,2,1,0,0,0,
            0,2,2,2,0,1,3,3,0,2,
-           0,0,2,1,0,1,1,0,0,0), byrow=T,
-         ncol=10, nrow=10)
+           0,0,2,1,0,1,1,0,0,0), byrow = TRUE, ncol = n, nrow = n)
 
 
 ## Definir valores iniciais para O e D
@@ -34,7 +33,7 @@ block_relaxation <- function(o, d, X, epslon = 0.001){
   while(sum((d-d_old)^2) + sum((o-o_old)^2) > epslon){ #criterio de convergencia
     o_old = o
     o = log(rowSums(X)/sum(exp(-d)))   #registra o valor antigo, e atualiza todos os o`s
-    d_old = dos
+    d_old = d
     d = -log(colSums(X)/sum(exp(o)))  #registra o valor antigo, e atualiza todos  d`s
     
     
@@ -102,6 +101,36 @@ nr.optim = function(x0, f1, f2, epslon = 0.0001,...){
   rownames(z) = paste("x", 1:nrow(x0), sep = "")
   colnames(z) = paste("i", 0:conta, sep = "")
   list("arg.ot" = x0, "seq.ot" = z, "iterações" = conta)  
+}
+
+grad <- function(theta, X){
+  
+  A = matrix(NA, ncol = 1, nrow = 2*nrow(X))
+
+  for(i in 1:nrow(X)){
+    temp = 0
+    for(j in 1:ncol(X)){
+      temp = temp - exp(theta[i] - theta[n+j]) + X[i,j]
+    }
+    A[i,] <- temp
+  }
+  
+  for(j in 1:nrow(X)){
+    temp = 0
+    for(i in 1:ncol(X)){
+      temp = temp + exp(theta[i] - theta[n+j]) - X[i,j]
+    }
+    A[n+j,] <- temp
+  }
+  
+  return(A)
+
+}
+
+hessian <- function(theta, X){
+  
+  H <- matrix(NA, ncol = 2*ncol(X), nrow = 2*nrow(X))
+  
 }
 
 nr.optim(theta0, grad, hessian)

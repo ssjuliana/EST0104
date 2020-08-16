@@ -4,10 +4,6 @@ f.obj <- function(z, mu, x){
   return(f)
 }
 
-# z é a indicadora para o grupo 1, ou seja N(2,1)
-
-#------------------------- 
-
 kmeans.func <- function(z,x){
   
   conta = 1
@@ -30,9 +26,6 @@ kmeans.func <- function(z,x){
     Z = cbind(Z,z)
     M = cbind(M,mu)
   }
-  
-  # arrumar a apresentação dos dados para não ficar confuso 
-  # transformar em grupo 1 (Z=1) e grupo 2 (z=0)
 
   Z = ifelse(Z == 0, 2, Z)
   z = ifelse(z == 0, 2, z)
@@ -53,8 +46,11 @@ kmeans.func <- function(z,x){
 
 
 set.seed(123)
-x = cbind(c(rnorm(15, mean = 2), rnorm(10, mean = 8)))
-plot(x)
+x = cbind(c(rnorm(45, mean = 5), rnorm(55, mean = 8)))
+
+require(ggplot2)
+ggplot() + geom_density(aes(x)) + theme_bw()
 
 z0 = sample(c(0,1), length(x), replace = TRUE) # valor inicial
 kmeans.func(z0, x)
+
