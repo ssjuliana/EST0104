@@ -8,7 +8,7 @@ n = 40
 m = 3
 
 set.seed(123)
-
+m1 = c(0,0,0)
 x <- rmixn(n = n, mu = rbind(m1,m2), sigma = list(diag(m), diag(m)), 
            w = c(0.5, 0.5), retInd = TRUE)
 
@@ -73,7 +73,7 @@ simulated.annealing <- function(x, m0){
   pos = which.max(f.eval)
   teta.ot = teta[pos,]
   
-  list("arg.opt" = teta.ot, "mean.accept" = mean(accept[-1]))
+  list("arg.opt" = teta.ot, "mean.accept" = mean(accept[-1]), 'it' = pos)
   
 }
 
@@ -89,6 +89,8 @@ EM.alg <- function(x, m0, eps = 1e-04){
   
   cc = 1
   
+  conta = 0
+  
   while(cc > eps){
     
     # Etapa E
@@ -103,16 +105,139 @@ EM.alg <- function(x, m0, eps = 1e-04){
     cc = mean(cc1 + cc2)
     mu1Inicial = mu1Par
     mu2Inicial = mu2Par
+    
+    conta = conta + 1
   }
   
-  list('arg.opt' = c(mu1Par, mu2Par))
+  list('arg.opt' = c(mu1Par, mu2Par), 'E' = E, 'iter' = conta)
   
 }
 
-EM.alg(x, m0)
+mix.true = attr(x, "index")
+mix.EM = ifelse(round(EM.alg(x, m0)$E, 1) == 0, 2, 1)
+
+table(mix.true, mix.EM)
 
 # d) optim do R
 
-optim(par = c(0, 0, 0, 3, 3, 3), fn = f, x = x, control = list(fnscale = -1))$par
+optim(par = c(1, 0.5, -0.5, 4, 2.5, 2), fn = f, x = x, control = list(fnscale = -1))
+
+# e) comparar
+
+m0 = c(-1, -2, 1, 4, 7, 5)
+
+set.seed(123)
+
+SA = simulated.annealing(x, m0 = m0)
+EM = EM.alg(x, m0)
+OPT = optim(par = c(1, 0.5, -0.5, 4, 2.5, 2), fn = f, x = x, method = 'SANN', control = list(fnscale = -1))
+
+round(SA$arg.opt, 2)
+round(EM$arg.opt, 2)
+round(OPT$par, 2)
+
+SA$it
+EM$iter
+OPT$counts
 
 
+# Trocar o valor inicial 
+
+m0 = c(2, 2, 2, 2, 2, 2)
+
+set.seed(123)
+
+SA = simulated.annealing(x, m0 = m0)
+EM = EM.alg(x, m0)
+OPT = optim(par = m0, fn = f, x = x, method = 'SANN', control = list(fnscale = -1))
+
+round(SA$arg.opt, 2)
+round(EM$arg.opt, 2)
+round(OPT$par, 2)
+
+# nenhum dos três algoritmos possuem resultados satisfatórios
+
+# f)
+
+m2 = c(1,1,0)
+
+set.seed(123)
+x2 <- rmixn(n = n, mu = rbind(m1,m2), sigma = list(diag(m), diag(m)), 
+            w = c(0.5, 0.5), retInd = TRUE)
+
+# attr(x2, "index")
+
+m0 = c(-1, -2, 1, 4, 7, 5)
+
+set.seed(123)
+
+SA = simulated.annealing(x2, m0 = m0)
+EM = EM.alg(x2, m0)
+OPT = optim(par = m0, fn = f, x = x2, method = 'SANN', control = list(fnscale = -1))
+
+
+# valores verdadeiros 
+c(m1, m2)
+
+# valores estimados 
+round(SA$arg.opt, 2)
+round(EM$arg.opt, 2)
+round(OPT$par, 2)
+
+SA$it
+EM$iter
+OPT$counts
+
+# podemos ver que o SA e o optim possuem comportamentos similares neste caso 
+# eles não conseguem estimar corretamente os vetores de média 
+# enquanto que o EM consegue. Foi o que melhor se saiu nesse caso. 
+
+# trocar valor inicial
+m0 = c(2, 2, 2, 2, 2, 2)
+
+set.seed(123)
+
+SA = simulated.annealing(x2, m0 = m0)
+EM = EM.alg(x2, m0)
+OPT = optim(par = m0, fn = f, x = x2, method = 'SANN', control = list(fnscale = -1))
+
+round(SA$arg.opt, 2)
+round(EM$arg.opt, 2)
+round(OPT$par, 2)
+
+# dessa vez todos os tres métodos falham na estimação dos vetores 
+# de médias. 
+
+# g) dados genéticos 
+
+EM.alg <- function(x, m0, eps = 1e-04){
+  
+  aux1 = length(m0)/2
+  
+  mu1Inicial = m0[1:aux1]
+  mu2Inicial = m0[(aux1 + 1):length(m0)]
+  
+  cc = 1
+  conta = 0
+  
+  while(cc > eps){
+    
+    # Etapa E
+    E = dmvnorm(x,mu1Inicial)/(dmvnorm(x,mu1Inicial) + 3*dmvnorm(x,mu2Inicial))
+    
+    # Etapa M
+    mu1Par = colSums(x*E)/sum(E)
+    mu2Par = colSums(x*(1 - E))/sum(1 - E)
+    
+    cc1 = (mu1Inicial- mu1Par)^2
+    cc2 = (mu2Inicial - mu2Par)^2
+    cc = mean(cc1 + cc2)
+    mu1Inicial = mu1Par
+    mu2Inicial = mu2Par
+    
+    conta = conta + 1
+  }
+  
+  list('arg.opt' = c(mu1Par, mu2Par), 'E' = E, 'iter' = conta)
+  
+}

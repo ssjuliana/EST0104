@@ -1,31 +1,23 @@
 ## Entrando a matriz X de dados 
 # a entrada ij indica o numero de gols que i marcou em j
 
-n = 10    # numero de times
+# DADOS BRASILEIRÃO 2018 
 
-X = matrix(c(0,2,5,6,3,1,3,3,1,2,
-           1,0,2,1,0,0,1,1,6,0,
-           2,1,0,1,0,0,2,0,1,5,
-           0,2,2,0,1,3,4,1,1,1,
-           2,2,3,1,0,4,4,2,3,1,
-           2,1,0,1,0,0,1,0,1,3,
-           1,0,2,1,0,0,0,1,2,5,
-           1,0,2,1,0,2,1,0,0,0,
-           0,2,2,2,0,1,3,3,0,2,
-           0,0,2,1,0,1,1,0,0,0), byrow = TRUE, ncol = n, nrow = n)
+source('BR2018Q4.R')
 
+n = ncol(X)    # numero de times
 
 ## Definir valores iniciais para O e D
-d = rep(1,10)
-o = rep(1,10)
+d = rep(1,n)
+o = rep(1,n)
 
 
 block_relaxation <- function(o, d, X, epslon = 0.001){
   
   conta = 1 # iteraçoes 
   
-  d_old = rep(0,10)
-  o_old = rep(0,10)   
+  d_old = rep(0,ncol(X))
+  o_old = rep(0,ncol(X))   
   
   O = matrix(o, ncol = 1)
   D = matrix(d, ncol = 1)
@@ -56,7 +48,7 @@ block_relaxation <- function(o, d, X, epslon = 0.001){
   
 }
 
-block_relaxation(o, d, X)
+bl.r = block_relaxation(o, d, X)
 
 
 # versão optim do R
@@ -75,11 +67,10 @@ logL = function(theta, X){
 }
 
 theta0 = c(o, d)
-optim(theta0,logL, X = X, control = list(fnscale = -1))
+opt = optim(theta0,logL, X = X, control = list(fnscale = -1))
 
 # versão newton-raphson 
 
-x0 = c(theta0)
 
 nr.optim = function(x0, f1, f2, epslon = 0.0001,...){
   
@@ -168,7 +159,24 @@ hessian <- function(theta, X){
   return(H)
 }
 
+# valor inicial os par do block
 theta0 = c(block_relaxation(o, d, X)$Defensivo$arg.ot, block_relaxation(o, d, X)$Ofensivo$arg.ot)
-nr.optim(theta0, grad, hessian)
+nr = nr.optim(theta0, grad, hessian)
 
-# nao está finalizado
+results = cbind(cbind(c(bl.r$Defensivo$arg.ot, bl.r$Ofensivo$arg.ot)), 
+                 cbind(opt$par), nr$arg.ot)
+
+colnames(results) = c('BR', 'NM', 'NR')
+results
+
+require(ggplot2)
+require(tidyr)
+
+r.df = gather(data.frame(time = colnames(X), 
+                         par = c(rep('Ofensivo', 20), rep('Defensivo', 20)), 
+                         results), 
+              metodo, arg.ot, BR:NR, factor_key = TRUE)
+
+ggplot(data = r.df) + 
+  geom_point(aes(x = time, y = arg.ot, color = metodo)) + 
+  facet_wrap( ~ par, ncol = 2)
