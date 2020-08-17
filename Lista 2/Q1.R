@@ -46,11 +46,23 @@ kmeans.func <- function(z,x){
 
 
 set.seed(123)
-x = cbind(c(rnorm(45, mean = 5), rnorm(55, mean = 8)))
+x1 = cbind(c(rnorm(45, mean = 5), rnorm(55, mean = 8)))
+x2 = cbind(c(rnorm(20, mean = 3), rnorm(80, mean = 7)))
+x3 = cbind(c(rnorm(50, mean = 2, sd = 2), rnorm(50, mean = 10, sd = 2)))
+
+require(tidyr)
+x.df = gather(data.frame(x1,x2,x3), v, x, x1:x3, factor_key = TRUE)
+
 
 require(ggplot2)
-ggplot() + geom_density(aes(x)) + theme_bw()
+# os dados 
+ggplot(data = x.df) + 
+  geom_density(aes(x = x)) +
+  facet_wrap( ~ v, ncol = 3) + 
+  theme_bw()
 
-z0 = sample(c(0,1), length(x), replace = TRUE) # valor inicial
-kmeans.func(z0, x)
+z0 = sample(c(0,1), length(x1), replace = TRUE) # valor inicial
+kmeans.func(z0, x1)$grupo$z.arg.ot
+kmeans.func(z0, x2)$grupo$z.arg.ot
+kmeans.func(z0, x3)$grupo$z.arg.ot
 

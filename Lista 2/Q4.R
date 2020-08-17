@@ -75,7 +75,7 @@ logL = function(theta, X){
 }
 
 theta0 = c(o, d)
-optim(theta0,logL, X = X)
+optim(theta0,logL, X = X, control = list(fnscale = -1))
 
 # versão newton-raphson 
 
@@ -89,9 +89,9 @@ nr.optim = function(x0, f1, f2, epslon = 0.0001,...){
   z = x0
   
   while(cc > epslon && conta < 1000){
-    x1 = x0 - solve(f2(x0, X))%*%(f1(x0, X))
+    x1 = x0 - solve(f2(x0, X), tol = 1e-200)%*%(f1(x0, X))
     
-    cc = sum((x1 - x0)^2) # criteiro de convergencia
+    cc = t(f1(x1, X))%*%f1(x1, X) # criteiro de convergencia
     x0 = x1
     conta = conta + 1
     z = cbind(z,x1)
@@ -129,10 +129,46 @@ grad <- function(theta, X){
 
 hessian <- function(theta, X){
   
-  H <- matrix(NA, ncol = 2*ncol(X), nrow = 2*nrow(X))
+  H <- matrix(0, ncol = 2*ncol(X), nrow = 2*nrow(X))
   
+  # diagonal 
+  for(i in 1:nrow(X)){
+    temp = 0
+    for(j in 1:ncol(X)){
+      temp = temp - exp(theta[i] - theta[n+j]) 
+    }
+    H[i,i] <- temp
+  }
+  
+  for(j in 1:nrow(X)){
+    temp = 0
+    for(i in 1:ncol(X)){
+      temp = temp - exp(theta[i] - theta[n+j])
+    }
+    H[n+j,n+j] <- temp
+  }
+  
+  # o_i d_k 
+  
+  for(i in 1:nrow(X)){
+    for(j in 1:ncol(X)){
+      H[i,ncol(X)+j] = exp(theta[i] - theta[n+j]) 
+    }
+  }
+  
+  #d_j o_k
+  
+  for(j in 1:nrow(X)){
+    for(i in 1:ncol(X)){
+      H[ncol(X)+j, i] <- exp(theta[i] - theta[n+j])
+    }
+  }
+
+  
+  return(H)
 }
 
+theta0 = c(block_relaxation(o, d, X)$Defensivo$arg.ot, block_relaxation(o, d, X)$Ofensivo$arg.ot)
 nr.optim(theta0, grad, hessian)
 
 # nao está finalizado

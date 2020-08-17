@@ -77,7 +77,7 @@ simulated.annealing <- function(x, m0){
   
 }
 
-m0 = c(-1, -1, -1, 5, 5, 5)
+m0 = c(-1, -2, 1, 4, 7, 5)
 simulated.annealing(x, m0 = m0)
 
 # c) algoritmo EM 

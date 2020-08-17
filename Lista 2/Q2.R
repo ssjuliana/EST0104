@@ -38,8 +38,6 @@ nr.optim = function(x0, f1, f2, epslon = 0.0001,...){
   list("arg.ot" = x0, "seq.ot" = z, "iterações" = conta)  
 }
 
-# aplicar newton-raphson no problema
-
 # grandiente
 f1 = function(b,x,y){
   rbind(-2*sum((y - b[1]*exp(b[2]*x))*exp(b[2]*x)), 
