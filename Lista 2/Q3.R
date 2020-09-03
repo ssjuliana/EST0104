@@ -210,12 +210,13 @@ round(OPT$par, 2)
 
 # g) dados genéticos 
 
-EM.alg <- function(x, m0, eps = 1e-04){
+x = read.table("DadosGeneticos.txt")
+x = as.matrix(t(x))
+
+EM.gen <- function(x, m0, eps = 1e-04){
   
-  aux1 = length(m0)/2
-  
-  mu1Inicial = m0[1:aux1]
-  mu2Inicial = m0[(aux1 + 1):length(m0)]
+  m1 = t0[1:100]
+  m2 = t0[101:200]
   
   cc = 1
   conta = 0
@@ -223,17 +224,18 @@ EM.alg <- function(x, m0, eps = 1e-04){
   while(cc > eps){
     
     # Etapa E
-    E = dmvnorm(x,mu1Inicial)/(dmvnorm(x,mu1Inicial) + 3*dmvnorm(x,mu2Inicial))
+    E = (apply(dnorm(x-m1), 2, prod))/(apply(dnorm(x-m1), 2, prod) + apply(dnorm(x-m2), 2, prod))
     
     # Etapa M
-    mu1Par = colSums(x*E)/sum(E)
-    mu2Par = colSums(x*(1 - E))/sum(1 - E)
-    
-    cc1 = (mu1Inicial- mu1Par)^2
-    cc2 = (mu2Inicial - mu2Par)^2
+    mu1Par = rowSums(x*E)/sum(E)
+    mu2Par = rowSums(x*(1 - E))/sum(1 - E)
+
+    cc1 = (m1- mu1Par)^2
+    cc2 = (m2 - mu2Par)^2
     cc = mean(cc1 + cc2)
-    mu1Inicial = mu1Par
-    mu2Inicial = mu2Par
+    
+    m1 = mu1Par
+    m2 = mu2Par
     
     conta = conta + 1
   }
@@ -241,3 +243,11 @@ EM.alg <- function(x, m0, eps = 1e-04){
   list('arg.opt' = c(mu1Par, mu2Par), 'E' = E, 'iter' = conta)
   
 }
+
+
+# os resultados
+result.gen = EM.gen(x, t0)
+result.km = kmeans(t(x), centers = 2)
+
+ifelse(result.gen$E < 0.5, 2, 1) #por EM
+result.km$cluster #pelo K-means

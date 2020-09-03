@@ -177,6 +177,8 @@ r.df = gather(data.frame(time = colnames(X),
                          results), 
               metodo, arg.ot, BR:NR, factor_key = TRUE)
 
-ggplot(data = r.df) + 
-  geom_point(aes(x = time, y = arg.ot, color = metodo)) + 
-  facet_wrap( ~ par, ncol = 2)
+ggplot(data = r.df, mapping = aes(x = time, y = arg.ot, color = metodo, group = metodo)) + 
+  geom_line(linetype = 'dashed') +
+  geom_point() + 
+  facet_wrap( ~ par, ncol = 2) + 
+  labs(x = 'Time', y = 'Estimativa', color = 'Método')
