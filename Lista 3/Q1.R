@@ -136,7 +136,6 @@ rger = rnbinom(ns,r,p)
 
 
 #comparando o gerador criado com o gerador do R
-sum(rger == mger)
 mtab = conta(z,mger)
 rtab = conta(z,rger)
 
@@ -149,3 +148,28 @@ plot(mtab, type = "h", main = paste0('Negative Binomial (r = ', r, ', p = ',p, '
 lines(rtab, type = "h", ylab = '', col = 'red', lty = 2)
 legend(40, 30, legend = c("Simulation", "Neg. Binon dist."), col = c("black", "red"), lty = 1:2, cex = 0.8)
 text(60, 10, paste0('X² test p-value: ', round(aderencia(freq.o,freq.e)$valor.p, 4)))
+
+
+# fmp da distribuição bivariada 
+
+fmp.bivar = function(x,y,n,p){
+  choose(n,x)*choose(n,y)*((x^y*(n-x)^(n-y)*p^x*(1-p)^(n-x))/(n^n)) 
+}
+
+
+p = 0.3 #escolhendo p 
+n = 10 #escolhendo n
+
+# nesse caso, como x e y vao ate n 
+# entao nao precisamos definir um limite sup pra alcançar
+# e sim teremos as combinações de 0 até n tanto em x quanto em y
+
+comb = expand.grid(0:n,0:n); colnames(comb) = c("x","y")
+
+fmp.prob = fmp.bivar(comb[1:nrow(comb),'x'], comb[1:nrow(comb),'y'], n, p)
+fda.bivar = cumsum(fmp.prob)
+
+z = 0:length(fda.bivar)
+ns = 1000
+mger = gna.disc3(z,fmp.bivar(z,z,n,p),ns)
+mtab = conta(z,mger)
