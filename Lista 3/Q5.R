@@ -30,3 +30,16 @@ legend('bottomright', legend = levels(df$gr), col = 1:4, cex = 0.8, pch = 1, bty
 
 # b) 
 
+mod <- depmix(logret ~ 1, family = gaussian(), nstates = 4, data = df)
+set.seed(1)
+fm2 <- fit(mod, verbose = FALSE)
+
+summary(fm2)
+print(fm2)
+
+# Classification (inference task)
+probs <- posterior(fm2)             # Compute probability of being in each state
+head(probs)
+rowSums(head(probs)[,2:5])          # Check that probabilities sum to 1
+
+table(paste0('i', df$gr), paste0('s', probs$state))
